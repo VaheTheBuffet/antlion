@@ -58,10 +58,52 @@ int main()
         video::FOV,
         CAMERA_PERSPECTIVE};
     
+    Vector2 mouse{}, prev_mouse{};
+
+    mouse = GetMousePosition();
+
     while(!WindowShouldClose()) {
         PollInputEvents();
         
-        UpdateCamera(&cam, CAMERA_FREE);
+        //input
+        mouse = GetMousePosition();
+        Vector2 m_del = (mouse - prev_mouse) * 0.5;
+        prev_mouse = mouse;
+        Vector3 rotation{m_del.x, m_del.y, 0};
+
+        float forwardback = 0.f;
+        float rightleft = 0.f;
+        float updown = 0.0f;
+
+        if (IsKeyDown(KEY_W)) {
+            forwardback += 1.f;
+        }
+        if (IsKeyDown(KEY_S)) {
+            forwardback -= 1.f;
+        }
+        if (IsKeyDown(KEY_A)) {
+            rightleft += 1.f;
+        }
+        if (IsKeyDown(KEY_D)) {
+            rightleft -= 1.f;
+        }
+        if (IsKeyDown(KEY_Q)) {
+            updown += 1.f;
+        }
+        if (IsKeyDown(KEY_E)) {
+            updown -= 1.f;
+        }
+
+        Vector3 forward = Vector3Normalize(cam.target - cam.position);
+        Vector3 right = Vector3CrossProduct(Vector3{0.f, 1.f, 0.f}, forward);
+        
+        Vector3 delta = forward * forwardback + right * rightleft + Vector3{0.f, 1.f, 0.f} * updown;
+        delta = Vector3Normalize(delta) * GetFrameTime() * 30.f;
+
+        cam.position += delta;
+        cam.target += delta;
+        UpdateCameraPro(&cam, Vector3{}, rotation, 0.f);
+        //input
 
         Matrix v = GetCameraMatrix(cam);
         SetShaderValueMatrix(voxel_shader, view, v);

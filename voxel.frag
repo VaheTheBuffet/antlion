@@ -25,6 +25,13 @@ const vec3 colors[4] = vec3[4](
     vec3(0.1, 1.0, 0.3)
 );
 
+const vec3 normals[4] = vec3[4] (
+    vec3(0.0, 0.0, 0.0),
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.1, 0.0, 1.0)
+);
+
 struct Ray {
     vec3 p;
     vec3 d;
@@ -121,6 +128,7 @@ void main()
     block_t block = cast_ray(look_ray);
 
     out_color = float(block) * vec4(0.5f, 0.5f, 0.5f, 1.f);
-    out_color.rgb *= colors[face];
+    //out_color.rgb *= colors[face];
+    out_color *= abs(dot(normals[face], look_ray.d));
     out_color.a = 1.f;
 }
