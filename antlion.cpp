@@ -17,6 +17,7 @@ int main()
 {
     World::init_world();
     InitWindow(video::WIDTH, video::HEIGHT, "antlion");
+    DisableCursor();
 
     Shader voxel_shader = LoadShader(NULL, "voxel.frag");
 
@@ -31,11 +32,12 @@ int main()
     glTexImage3D(GL_TEXTURE_3D, 0, GL_R32UI, World::WIDTH, World::WIDTH,
                     World::HEIGHT, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, World::world);
 
+    int view, model;
     {
-        int model, view, v_width, v_height, v_viewport_width, v_viewport_height;
+        int v_width, v_height, v_viewport_width, v_viewport_height;
 
-        model = GetShaderLocation(voxel_shader, "model");
         view = GetShaderLocation(voxel_shader, "view");
+        model = GetShaderLocation(voxel_shader, "model");
         v_width = GetShaderLocation(voxel_shader, "v_width");
         v_height = GetShaderLocation(voxel_shader, "v_height");
         v_viewport_width = GetShaderLocation(voxel_shader, "v_viewport_width");
@@ -49,8 +51,21 @@ int main()
         SetShaderValue(voxel_shader, v_viewport_height, &video::VIEWPORT_HEIGHT, SHADER_UNIFORM_FLOAT);
     }
 
+    Camera3D cam{
+        Vector3{World::WIDTH_H, World::HEIGHT_H, World::WIDTH_H},
+        Vector3{World::WIDTH_H, World::HEIGHT_H, World::WIDTH_H + 1},
+        Vector3{0.f, 1.f, 0.f},
+        video::FOV,
+        CAMERA_PERSPECTIVE};
+    
     while(!WindowShouldClose()) {
         PollInputEvents();
+        
+        UpdateCamera(&cam, CAMERA_FREE);
+
+        Matrix v = GetCameraMatrix(cam);
+        SetShaderValueMatrix(voxel_shader, view, v);
+
         BeginDrawing();
 
         ClearBackground(WHITE);
@@ -62,6 +77,7 @@ int main()
     }
 
     glDeleteTextures(1, &world_tex);
+    EnableCursor();
     CloseWindow();
 
     return 0;

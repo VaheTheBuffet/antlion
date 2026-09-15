@@ -18,6 +18,13 @@
 
 #define block_t uint
 
+const vec3 colors[4] = vec3[4](
+    vec3(1.0, 1.0, 1.0),
+    vec3(1.0, 0.5, 0.2),
+    vec3(0.2, 0.5, 1.0),
+    vec3(0.1, 1.0, 0.3)
+);
+
 struct Ray {
     vec3 p;
     vec3 d;
@@ -32,6 +39,8 @@ uniform float v_viewport_width;
 uniform float v_viewport_height;
 
 out vec4 out_color;
+
+int face = 0;
 
 #define fast_floor(f) (float(int(f - 0.001f)))
 #define fast_ciel(f) (float(int(f + 1.f)))
@@ -77,12 +86,15 @@ block_t cast_ray(Ray ray)
 
         x += is_x ? dx : 0;
         tx += is_x ? stepx : 0.f;
+        face = is_x ? 1 : face;
 
         y += is_y ? dy : 0;
         ty += is_y ? stepy : 0.f;
+        face = is_y ? 2 : face;
 
         z += is_z ? dz : 0;
         tz += is_z ? stepz : 0.f;
+        face = is_z ? 3 : face;
 
     } while (true);
 
@@ -95,20 +107,20 @@ block_t cast_ray(Ray ray)
 void main() 
 {
     Ray look_ray;
-    look_ray.p.x = W_WIDTH_H;
-    look_ray.p.y = W_HEIGHT_H;
-    look_ray.p.z = W_WIDTH_H;
+    look_ray.p = (inverse(view) * vec4(0.f, 0.f, 0.f, 1.f)).xyz;
 
-    look_ray.d.xy = gl_FragCoord.xy;
-    look_ray.d.xy /= vec2(v_width, v_height);
-    look_ray.d.xy -= 0.5f;
-    look_ray.d.xy *= vec2(v_viewport_width, v_viewport_height);
-    look_ray.d.z = NEAR;
-    //look_ray.d = (vec4(look_ray.d, 1.f) * model * view).xyz;
+    vec3 look_at = vec3(gl_FragCoord.xy, -NEAR);
+    look_at.xy /= vec2(v_width, v_height);
+    look_at.xy -= 0.5f;
+    look_at.xy *= vec2(v_viewport_width, v_viewport_height);
+    look_at = (inverse(view) * vec4(look_at, 1.f)).xyz;
+
+    look_ray.d = look_at - look_ray.p;
     look_ray.d /= length(look_ray.d);
 
     block_t block = cast_ray(look_ray);
 
-    out_color = float(block) * vec4(0.5, 0.5, 0.5, 1.0);
-    out_color.a = 1.0;
+    out_color = float(block) * vec4(0.5f, 0.5f, 0.5f, 1.f);
+    out_color.rgb *= colors[face];
+    out_color.a = 1.f;
 }

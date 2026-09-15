@@ -79,10 +79,16 @@ void World::init_world()
 {
     std::fill(world, world + VOL, B_AIR);
 
-    for (int y = HEIGHT_H; y < HEIGHT_H + 100; ++y) {
-        for (int x = WIDTH_H; x < WIDTH_H + 100; ++x) {
-            World::set(x, y, WIDTH_H + 300, B_GRASS);
+    for (int x = 0; x < WIDTH; ++x) {
+        for (int z = 0; z < WIDTH; ++z) {
+            float f = PI * static_cast<float>(x + z) / (4.f * WIDTH);
+            int max_height = HEIGHT / 2 * sinf(f);
+
+            for (int y = 0; y < max_height; ++y) {
+                world[x + z * WIDTH + y * AREA] = B_GRASS;
+            }
         }
     }
+
 }
 #endif
